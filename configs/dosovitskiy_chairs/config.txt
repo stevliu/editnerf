@@ -1,0 +1,28 @@
+expname = dosovitskiy_chairs
+basedir = ./logs/
+datadir = data/dosovitskiy_chairs
+
+style_dim = 64
+embed_dim = 128
+use_styles = True
+separate_codes = True
+
+use_viewdirs = True
+lrate_decay = 500
+
+N_rand = 1024
+N_samples = 64
+N_importance = 128
+
+precrop_iters = 500
+precrop_frac = 0.5
+
+shared_shape = True
+
+blender_near = 60.
+blender_far = 160.
+N_instances = 500
+
+W_bottleneck = 8
+
+i_print = 100

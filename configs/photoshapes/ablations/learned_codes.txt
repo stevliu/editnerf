@@ -1,0 +1,26 @@
+expname = learned_codes
+basedir = ./logs/ablations/photoshapes
+datadir = data/photoshapes
+
+style_dim = 64
+embed_dim = 128
+use_styles = True
+
+use_viewdirs = True
+lrate_decay = 500
+
+N_rand = 1024
+N_samples = 64
+N_importance = 128
+
+precrop_iters = 500
+precrop_frac = 0.5
+
+blender_near = 0.
+blender_far = 10.
+N_instances = 100
+
+W_bottleneck = 8
+W_instance = 350
+
+i_print = 100

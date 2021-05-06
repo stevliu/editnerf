@@ -1,0 +1,31 @@
+expname = cars
+basedir = ./logs/
+datadir = data/carla
+
+style_dim = 64
+embed_dim = 128
+use_styles = True
+separate_codes = True
+
+use_viewdirs = True
+lrate_decay = 500
+
+N_rand = 512
+N_samples = 64
+N_importance = 128
+
+precrop_iters = 500
+precrop_frac = 0.5
+
+shared_shape = True
+
+blender_near = 0.
+blender_far = 30.
+N_instances = 1000
+
+N_viewdirs_reg = 64
+var_param = 0.1
+
+W_bottleneck = 8
+
+i_print = 100

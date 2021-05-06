@@ -1,0 +1,8 @@
+pytorch-gpu
+torchvision
+imageio
+configargparse
+tqdm
+tensorflow-gpu=1.14
+jupyter
+jupyterlab
