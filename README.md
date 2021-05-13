@@ -1,6 +1,6 @@
 # Editing Conditional Radiance Fields
 
-#### [Project](http://editnerf.csail.mit.edu/) |   [Paper](http://editnerf.csail.mit.edu/paper.pdf) |   [Video](https://www.youtube.com/watch?v=9qwRD4ejOpw) |   [Demo](https://colab.research.google.com/github/stevliu/editnerf/blob/master/notebooks/editnerf.ipynb)
+#### [Project](http://editnerf.csail.mit.edu/) |   [Paper](http://editnerf.csail.mit.edu/paper.pdf) |   [Video](https://www.youtube.com/watch?v=9qwRD4ejOpw) |   [Demo](https://colab.research.google.com/github/stevliu/editnerf/blob/master/editnerf.ipynb)
 
 **Editing Conditional Radiance Fields** <br>
 [Steven Liu](http://people.csail.mit.edu/stevenliu/),
@@ -82,7 +82,6 @@ To render train and test views from a conditional radiance field, you can run:
 ```bash
 python test_nerf.py --config config-file --render_test --render_train
 ```
-where `config-file` is the file used to train the conditional radiance field to evaluate. 
 
 Then, to run evaluation metrics on the rendered samples, you can run:
 ```bash 
