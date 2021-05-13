@@ -82,6 +82,7 @@ To render train and test views from a conditional radiance field, you can run:
 ```bash
 python test_nerf.py --config config-file --render_test --render_train
 ```
+where `config-file` is the same config file used during training.
 
 Then, to run evaluation metrics on the rendered samples, you can run:
 ```bash 
