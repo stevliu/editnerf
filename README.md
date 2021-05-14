@@ -20,18 +20,18 @@ in arXiv 2021.
 <br>
 Our method propagates sparse 2D user scribbles to fill an object region, rendering the edit consistently across views. The user provides a color, a foreground scribble for the region to change, and a background scribble for regions to keep unchanged. To conduct the edit, we optimize a reconstruction-based loss to encourage the model to change the color at the foreground scribble, but maintain the color on the background scribbles.
 
-<img src="images/shapedits.png"  width="800" />
+<img src="images/shapeedits.png"  width="800" />
 <br>
 Our method propagates 2D user edits to remove or add an object part, propagating the 2D edit consistently across views. For shape removal, the user scribbles over a region of the object to remove. To conduct the removal, we optimize both a reconstruction loss and a density-based loss, encouraging the model to remove density at the scribbled regions. For shape addition, the user selects an object part to paste into the instance. To conduct the addition, we optimize a reconstruction loss similar to the one used for color editing.
 
 <img src="images/swapping.png"  width="800" />
 <br>
-Our method can transfer shape and color between object instances simply by swapping the color and shape codes between instances. Though the color output of the model is functionally dependent on the shape code, we observe that changing the shape code leaves the color of the chair unchanged.
+Our method can transfer shape and color between object instances simply by swapping the color and shape codes between instances. 
 
 
 <img src="images/realimage.png"  width="800" />
 <br>
-Our method can finetune a conditional radiance field to a single still real image. Our method is able to render novel views of the real object instance and conduct color and shape editing on the instance.
+Our method is able to render novel views of the real object instance and conduct color and shape editing on the instance.
 
 
 ## Method
