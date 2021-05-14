@@ -1,4 +1,5 @@
-import copy, os
+import copy
+import os
 
 import torch
 import numpy as np
@@ -23,10 +24,11 @@ N_ITERS = {'color': 100, 'removal': 100, 'addition': 10000}
 LR = 0.001
 N_RAYS = {'color': 64, 'removal': 8192}
 
+
 class NeRFEditingApp(labwidget.Widget):
     def __init__(self, instance, config, use_cached=True, expname=None, edit_type=None, num_canvases=9, shape_params='fusion_shape_branch', color_params='color_branch', randneg=8192, device='cuda:0'):
-        super().__init__(style=dict(border="3px solid gray", padding="8px",display="inline-block"))
-        torch.set_default_tensor_type('torch.cuda.FloatTensor' if device=='cuda:0' else 'cpu')
+        super().__init__(style=dict(border="3px solid gray", padding="8px", display="inline-block"))
+        torch.set_default_tensor_type('torch.cuda.FloatTensor' if device == 'cuda:0' else 'cpu')
         self.edit_type = edit_type
         self.instance = instance
         self.num_canvases = num_canvases
@@ -41,7 +43,7 @@ class NeRFEditingApp(labwidget.Widget):
         self.copy_canvas = paintwidget.PaintWidget(image='', width=self.size * 2, height=self.size * 2).on('mask', self.copy)
         self.copy_mask = None
         inline = dict(display='inline', border="2px solid gray")
-        
+
         self.toggle_rgbs_disps_btn = labwidget.Button('show depth', style=inline).on('click', self.toggle_rgb_disps)
         self.positive_mask_btn = labwidget.Button(self.pad('edit color'), style=inline).on('click', self.positive_mask)
         self.addition_mask_btn = labwidget.Button(self.pad('add shape'), style=inline).on('click', self.add)
@@ -50,7 +52,7 @@ class NeRFEditingApp(labwidget.Widget):
         self.shape_from_btn = labwidget.Button(self.pad('transfer shape'), style=inline).on('click', self.shape_from)
         self.execute_btn = labwidget.Button(self.pad('execute'), style=inline).on('click', self.execute_edit)
         self.brushsize_textbox = labwidget.Textbox(5, desc='brushsize: ', size=3).on('value', self.change_brushsize)
-       
+
         self.target = None
         self.use_color_cache = True
 
@@ -61,7 +63,7 @@ class NeRFEditingApp(labwidget.Widget):
         self.color_pallete = [labwidget.Image(src=bg_img, style=self.color_style).on('click', self.set_color)]
         self.color_pallete[-1].index = 0
         self.color_pallete[-1].color_type = 'bg'
-       
+
         for color in mean_colors.colors.values():
             image = torch.zeros(3, 32, 32)
             image[0, :, :] = color[0]
@@ -71,7 +73,7 @@ class NeRFEditingApp(labwidget.Widget):
             self.color_pallete.append(labwidget.Image(src=renormalize.as_url(image), style=self.color_style).on('click', self.set_color))
             self.color_pallete[-1].index = len(self.color_pallete) - 1
             self.color_pallete[-1].color_type = 'color'
-            #TODO: Highlight the white box with black for clarity
+            # TODO: Highlight the white box with black for clarity
 
         self.color = None
         self.mask_type = None
@@ -81,7 +83,7 @@ class NeRFEditingApp(labwidget.Widget):
 
         train, test, optimizer, styles = load_model(instance, config, expname=expname)
         poses, hwfs, cache, args = load_dataset(instance, config, num_canvases=num_canvases, N_instances=styles.shape[0], expname=expname, use_cached=use_cached)
-        self.parentdir = load_config(config).expname 
+        self.parentdir = load_config(config).expname
         self.expname = expname if expname else self.parentdir
         self.savedir = os.path.join(self.expname, str(instance))
         os.makedirs(self.savedir, exist_ok=True)
@@ -93,12 +95,12 @@ class NeRFEditingApp(labwidget.Widget):
         self.nfs = [[self.near, self.far]] * self.poses.shape[0]
         self.hwfs = hwfs.to(device)
         self.old_fine_network = dict(copy.deepcopy(test['network_fine']).named_parameters())
-        self.train_kwargs = train 
+        self.train_kwargs = train
         self.test_kwargs = test
         self.optimizer = None
         self.all_instance_styles = styles
         self.instance_style = styles[instance].unsqueeze(dim=0).to(device)
-        
+
         if cache is not None:
             self.weights = cache['weights']
             self.alphas = cache['alphas']
@@ -120,7 +122,7 @@ class NeRFEditingApp(labwidget.Widget):
                 src=renormalize.as_url(resized)).on('click', self.set_editing_canvas))
             self.real_images_array[-1].index = i
             self.real_canvas_array.append(paintwidget.PaintWidget(
-                image=renormalize.as_url(image), 
+                image=renormalize.as_url(image),
                 width=self.size * 3, height=self.size * 3).on('mask', self.change_mask))
             self.real_canvas_array[-1].index = i
             self.real_canvas_array[-1].negative_mask = ''
@@ -135,11 +137,11 @@ class NeRFEditingApp(labwidget.Widget):
         self.editname_textbox = labwidget.Datalist(choices=self.saved_names(), style=inline)
         self.save_btn = labwidget.Button('save', style=inline).on('click', self.save)
         self.load_btn = labwidget.Button('load', style=inline).on('click', self.load)
-    
+
     def pad(self, s, total=14):
         white = ' ' * ((total - len(s)) // 2)
-        return white + s + white 
-    
+        return white + s + white
+
     def make_trasparent(self):
         for button in [self.sigma_mask_btn, self.positive_mask_btn, self.addition_mask_btn, self.color_from_btn, self.shape_from_btn]:
             button.style = {'display': 'inline', 'color': 'grey', 'border': "1px solid grey"}
@@ -148,13 +150,13 @@ class NeRFEditingApp(labwidget.Widget):
         self.mask_type = 'negative'
         if self.editing_canvas.image != '':
             self.editing_canvas.mask = self.real_canvas_array[self.editing_canvas.index].negative_mask
-    
+
     def positive_mask(self):
         self.mask_type = 'positive'
         self.make_trasparent()
         self.positive_mask_btn.style = {'display': 'inline', 'color': 'black', 'border': "2px solid black"}
         self.editing_canvas.mask = ''
-    
+
     def sigma_mask(self):
         self.mask_type = 'sigma'
         self.make_trasparent()
@@ -163,7 +165,7 @@ class NeRFEditingApp(labwidget.Widget):
 
     def from_editing_canvas(self):
         self.real_canvas_array[self.editing_canvas.index].image = self.editing_canvas.image
-        
+
     def update_canvas(self, images, disps=None):
         for i, image in enumerate(images):
             resized_rgb = F.interpolate(image.unsqueeze(dim=0), size=(self.size, self.size)).squeeze(dim=0)
@@ -175,10 +177,10 @@ class NeRFEditingApp(labwidget.Widget):
                 resized_disp = F.interpolate(disp_img.unsqueeze(dim=0), size=(self.size, self.size)).squeeze(dim=0)
                 self.real_canvas_array[i].resized_disp = renormalize.as_url(resized_disp)
                 self.real_canvas_array[i].disp = renormalize.as_url(disp_img)
-        
+
         if self.editing_canvas.index >= 0:
             self.editing_canvas.image = self.real_canvas_array[self.editing_canvas.index].image
-    
+
     def toggle_rgb_disps(self):
         self.show_rgbs = not self.show_rgbs
         for i in range(len(self.real_canvas_array)):
@@ -221,13 +223,13 @@ class NeRFEditingApp(labwidget.Widget):
             self.editing_canvas.mask = self.real_canvas_array[evt.target.index].negative_mask
         else:
             self.editing_canvas.mask = ''
-    
+
     def add(self, ev):
         self.edit_type = 'addition'
         self.make_trasparent()
         self.addition_mask_btn.style = {'display': 'inline', 'color': 'black', 'border': "2px solid black"}
         self.display_addition_instance()
-    
+
     def color_from(self, ev):
         self.edit_type = 'color_from'
         self.make_trasparent()
@@ -244,7 +246,7 @@ class NeRFEditingApp(labwidget.Widget):
         for i in range(12):
             self.transfer_instances_array[i].src = renormalize.as_url(self.trn(Image.open(os.path.join(self.parentdir, 'instances', '{:03d}.png'.format(i)))) * 2 - 1)
             self.transfer_instances_array[i].index = i
-    
+
     def display_addition_instance(self):
         for i in range(12):
             self.addition_instances_array[i].src = renormalize.as_url(self.trn(Image.open(os.path.join(self.parentdir, 'instances', '{:03d}.png'.format(i)))) * 2 - 1)
@@ -287,7 +289,7 @@ class NeRFEditingApp(labwidget.Widget):
                 return images, disps
             else:
                 return images
-            
+
     def target_transfer(self, instancenum, index):
         self.copy_canvas.mask = ''
         self.copy_canvas.index = index
@@ -300,7 +302,7 @@ class NeRFEditingApp(labwidget.Widget):
             i = self.editing_canvas.index
             orig_img = renormalize.from_url(self.editing_canvas.image)
             mask = renormalize.from_url(self.editing_canvas.mask) / 2 + 0.5
-            mask = F.interpolate(mask.unsqueeze(dim=0), size=(self.size*2, self.size*2)).squeeze()
+            mask = F.interpolate(mask.unsqueeze(dim=0), size=(self.size * 2, self.size * 2)).squeeze()
             if self.mask_type == 'positive':
                 self.edit_type = 'color'
                 if self.color is None:
@@ -325,11 +327,11 @@ class NeRFEditingApp(labwidget.Widget):
         else:
             if ev.target.image != '':
                 self.real_canvas_array[ev.target.index].negative_mask = ''
-    
+
     def render_editing_canvas(self, style):
         index = self.editing_canvas.index
         pose = self.poses[index].unsqueeze(dim=0)
-        self.editing_canvas.image = renormalize.as_url(self.render(pose, style, verbose=False, inds=[index], use_cache=self.edit_type=='color_from', update_cache=False)[0])
+        self.editing_canvas.image = renormalize.as_url(self.render(pose, style, verbose=False, inds=[index], use_cache=self.edit_type == 'color_from', update_cache=False)[0])
 
     def change_target(self, ev):
         self.target = ev.target.index
@@ -349,8 +351,8 @@ class NeRFEditingApp(labwidget.Widget):
         self.copy_mask = self.copy_canvas.mask
         tgt_style = self.copy_canvas.instance_style
         index = self.copy_canvas.index
-        area = renormalize.from_url(self.copy_mask, target='pt', size=(256,256))[0]
-        t,l,b,r = positive_bounding_box(area)
+        area = renormalize.from_url(self.copy_mask, target='pt', size=(256, 256))[0]
+        t, l, b, r = positive_bounding_box(area)
         H, W, focal = self.hwfs[0]
         H, W = H.item(), W.item()
 
@@ -359,34 +361,34 @@ class NeRFEditingApp(labwidget.Widget):
             rays_o, rays_d = rays_o[t:b, l:r], rays_d[t:b, l:r]
             rays_o, rays_d = rays_o.contiguous().view(-1, rays_o.shape[-1]), rays_d.contiguous().view(-1, rays_d.shape[-1])
             batch_rays = torch.stack([rays_o, rays_d], 0)
-            #render the rays under the editing canvas color style
+            # render the rays under the editing canvas color style
             style = torch.cat([tgt_style[:, :32], self.instance_style[:, 32:]], dim=1)
             style = style.repeat((batch_rays.shape[1], 1))
             rgb, disp, acc, extras = render(H, W, focal.item(), style=style, rays=batch_rays, **self.test_kwargs)
 
-        self.copy_canvas.rgb = rgb.view(b-t, r-l, -1).cpu() * 2 - 1
+        self.copy_canvas.rgb = rgb.view(b - t, r - l, -1).cpu() * 2 - 1
         self.copy_canvas.mask = ''
 
-    def paste(self):   
+    def paste(self):
         if self.copy_mask is None:
             self.show_msg('Please select a region to copy first.')
             return
 
-        copy_to = renormalize.from_url(self.editing_canvas.mask, target='pt', size=(256,256))[0]
-        area = renormalize.from_url(self.copy_mask, target='pt', size=(256,256))[0]
-        t,l,b,r = positive_bounding_box(area)
-        area = area[t:b,l:r]
+        copy_to = renormalize.from_url(self.editing_canvas.mask, target='pt', size=(256, 256))[0]
+        area = renormalize.from_url(self.copy_mask, target='pt', size=(256, 256))[0]
+        t, l, b, r = positive_bounding_box(area)
+        area = area[t:b, l:r]
 
         target_rgb = self.copy_canvas.rgb
         source_rgb = renormalize.from_url(self.editing_canvas.image).permute(1, 2, 0)
         rendered_img = paste_clip_at_center(source_rgb, target_rgb, centered_location(copy_to), area)[0].permute(2, 0, 1)
-        
+
         self.editing_canvas.mask = ''
         self.editing_canvas.image = renormalize.as_url(rendered_img)
         self.positive_masks[self.editing_canvas.index] += copy_to
         self.real_images_array[self.editing_canvas.index].src = renormalize.as_url(F.interpolate(rendered_img.unsqueeze(dim=0), size=(self.size, self.size)).squeeze())
         self.from_editing_canvas()
-    
+
     def execute_edit(self):
         if self.edit_type == 'color':
             self.toggle_grad()
@@ -416,7 +418,7 @@ class NeRFEditingApp(labwidget.Widget):
         rgbs, disps = self.render(self.poses, self.instance_style, get_disps=True, update=True)
         self.use_color_cache = True
         self.update_canvas(rgbs, disps)
-    
+
     def get_image_dataset(self):
         images = []
         poses = []
@@ -424,12 +426,12 @@ class NeRFEditingApp(labwidget.Widget):
         negative_masks = []
 
         for i in range(self.num_canvases):
-            #TODO: speed the .sum() up by having an edited field
+            # TODO: speed the .sum() up by having an edited field
             if self.real_canvas_array[i].negative_mask != '' or self.positive_masks[i].sum() != 0:
                 image = renormalize.from_url(self.real_canvas_array[i].image) / 2 + 0.5
-                if self.real_canvas_array[i].negative_mask != '': 
+                if self.real_canvas_array[i].negative_mask != '':
                     negative_mask = renormalize.from_url(self.real_canvas_array[i].negative_mask) / 2 + 0.5
-                    negative_mask = F.interpolate(negative_mask.unsqueeze(dim=0), size=(self.size*2, self.size*2)).squeeze()
+                    negative_mask = F.interpolate(negative_mask.unsqueeze(dim=0), size=(self.size * 2, self.size * 2)).squeeze()
                     negative_masks.append((negative_mask > 0).float().clamp_(0, 1))
                 else:
                     negative_masks.append(torch.zeros(self.positive_masks[i].shape).cpu())
@@ -454,7 +456,7 @@ class NeRFEditingApp(labwidget.Widget):
             self.optimizer = torch.optim.Adam(params=list(self.train_kwargs['network_fine'].parameters()), lr=LR, betas=(0.9, 0.999))
         images, positive_masks, negative_masks, poses = self.get_image_dataset()
         self.dataset = NerfDataset(images, poses, positive_masks, negative_masks, self.instance_style, self.hwfs, self.device, self.edit_type, N_rays=N_RAYS[self.edit_type], optimize_code=True, lr=LR)
-    
+
     def create_remove_dataset(self):
         if self.shape_params == 'fusion_shape_branch':
             self.optimizer = torch.optim.Adam(params=list(self.train_kwargs['network_fine'].fusion_shape_branch()), lr=LR, betas=(0.9, 0.999))
@@ -518,10 +520,10 @@ class NeRFEditingApp(labwidget.Widget):
             loss = img2mse(rgb, target_s)
             if self.edit_type == 'addition':
                 loss += img2mse(extras['rgb0'], target_s)
-        
+
             weight_change_loss = torch.tensor(0.)
             for k, v in self.train_kwargs['network_fine'].named_parameters():
-                if 'weight' in k: 
+                if 'weight' in k:
                     weight_change_loss += (self.old_fine_network[k] - v).pow(2).mean()
             weight_change_loss = 10 * weight_change_loss
             loss += weight_change_loss
@@ -540,7 +542,7 @@ class NeRFEditingApp(labwidget.Widget):
                 self.msg_out.print(f'Iter {i+1}/{niter}, Loss: {loss.item():.4f}', replace=True)
             else:
                 self.msg_out.print(f'Iter {i+1}/{niter}', replace=True)
-        
+
     def toggle_grad(self):
         for n, p in self.train_kwargs['network_fn'].named_parameters():
             p.requires_grad_(True)
@@ -550,7 +552,7 @@ class NeRFEditingApp(labwidget.Widget):
     def toggle_color_edit(self):
         self.train_kwargs['perturb'] = 0
         self.train_kwargs['perturb_coarse'] = 0
-        
+
         for n, p in self.train_kwargs['network_fn'].named_parameters():
             p.requires_grad_(False)
         for n, p in self.train_kwargs['network_fine'].named_parameters():
@@ -568,11 +570,11 @@ class NeRFEditingApp(labwidget.Widget):
     def save(self):
         if self.editname_textbox.value == '':
             self.show_msg('Please enter a name to save your file')
-            return 
+            return
 
         savedir = os.path.join(self.savedir, self.editname_textbox.value)
 
-        #clear the savedir if conflicting
+        # clear the savedir if conflicting
         if os.path.exists(savedir):
             for x in os.listdir(savedir):
                 os.remove(os.path.join(savedir, x))
@@ -592,11 +594,11 @@ class NeRFEditingApp(labwidget.Widget):
     def load(self):
         if self.editname_textbox.value == '':
             self.show_msg('Please enter a file name to load')
-            return 
+            return
         savedir = os.path.join(self.savedir, self.editname_textbox.value)
-        if not os.path.exists(savedir): 
+        if not os.path.exists(savedir):
             self.show_msg(f'{savedir} does not exist')
-            return 
+            return
         with open(os.path.join(savedir, 'edit_type.txt')) as f:
             self.edit_type = f.readlines()[0].strip()
         trn = transforms.ToTensor()
@@ -632,7 +634,7 @@ class NeRFEditingApp(labwidget.Widget):
         {h(self.save_btn)}
         {h(self.load_btn)}
         </div>
-          
+
         <div style="margin-top: 8px; margin-bottom: 8px;">
         <div style="display:inline-block; width:{1.00 * self.size + 2}px;
           text-align:center">
@@ -661,7 +663,7 @@ class NeRFEditingApp(labwidget.Widget):
         </div>
 
         <div>
-        
+
         <div style="display:inline-block;
           width:{(self.size + 2) * 4}px;
           height:{40}px;
@@ -699,7 +701,7 @@ class NeRFEditingApp(labwidget.Widget):
         <div style="width:{(self.size + 2) * 6 + 20}px;">
         <hr style="border:2px dashed gray; background-color: white">
         </div>
-        
+
         <div>
         <div style="display:inline-block;
         width:{(self.size + 2) * 6 + 20}px;
@@ -735,16 +737,19 @@ class NeRFEditingApp(labwidget.Widget):
 # Utility functions
 ##########################################################################
 
+
 def positive_bounding_box(data):
     pos = (data > 0)
     v, h = pos.sum(0).nonzero(), pos.sum(1).nonzero()
     left, right = v.min().item(), v.max().item()
     top, bottom = h.min().item(), h.max().item()
-    return top, left, bottom+1, right+1
+    return top, left, bottom + 1, right + 1
+
 
 def centered_location(data):
-    t,l,b,r = positive_bounding_box(data)
+    t, l, b, r = positive_bounding_box(data)
     return (t + b) // 2, (l + r) // 2
+
 
 def paste_clip_at_center(source, clip, center, area=None):
     source = source.unsqueeze(dim=0).permute(0, 3, 1, 2)
@@ -752,14 +757,15 @@ def paste_clip_at_center(source, clip, center, area=None):
     target = source.clone()
     t, l = (max(0, min(e - s, c - s // 2))
             for s, c, e in zip(clip.shape[2:], center, source.shape[2:]))
-    b, r = t+clip.shape[2],l+clip.shape[3]
+    b, r = t + clip.shape[2], l + clip.shape[3]
     # TODO: consider copying over a subset of channels.
-    target[:,:,t:b,l:r] = clip if area is None else (
-            (1 - area)[None,None,:,:].to(target.device) *
-            target[:,:,t:b,l:r] +
-            area[None,None,:,:].to(target.device) * clip)
+    target[:, :, t:b, l:r] = clip if area is None else (
+        (1 - area)[None, None, :, :].to(target.device) *
+        target[:, :, t:b, l:r] +
+        area[None, None, :, :].to(target.device) * clip)
     target = target.squeeze().permute(1, 2, 0)
     return target, (t, l, b, r)
+
 
 if __name__ == '__main__':
     import argparse
@@ -774,7 +780,7 @@ if __name__ == '__main__':
     parser.add_argument('--color_params', default='color_branch')
     parser.add_argument('--video', action='store_true')
     args = parser.parse_args()
-    
+
     writer = NeRFEditingApp(instance=args.instance, expname=args.expname, config=args.config, shape_params=args.shape_params, color_params=args.color_params, randneg=args.randneg, num_canvases=9, use_cached=False)
     expname = writer.expname
 
@@ -796,7 +802,7 @@ if __name__ == '__main__':
             os.makedirs(savedir, exist_ok=True)
             print('Working in', savedir)
 
-            #load and execute the edit
+            # load and execute the edit
             writer.editname_textbox.value = editname
             writer.load()
             writer.execute_edit()
@@ -818,13 +824,10 @@ if __name__ == '__main__':
 
         nfs = [[writer.near, writer.far]] * all_poses.shape[0]
         styles = writer.instance_style.repeat((all_poses.shape[0], 1))
-        
+
         with torch.no_grad():
             print(f'Saving samples in {savedir}')
             rgbs, disps, psnr = render_path(all_poses, styles, all_hwfs, writer.chunk, writer.test_kwargs, nfs=nfs, savedir=savedir, verbose=True)
             if args.video:
                 imageio.mimwrite(os.path.join(savedir, 'video.mp4'), to8b(rgbs), fps=30, quality=8)
                 imageio.mimwrite(os.path.join(savedir, 'disps.mp4'), to8b(disps / np.max(disps)), fps=30, quality=8)
-
-
- 

@@ -1,5 +1,7 @@
+from impt import preset_import
 import numpy as np
 import lpips
+
 
 def rgb2lum(im):
     """Converts RGB to relative luminance (if input is linear RGB) or luma
@@ -14,12 +16,12 @@ def rgb2lum(im):
     lum = 0.2126 * im[..., 0] + 0.7152 * im[..., 1] + 0.0722 * im[..., 2]
 
     return lum
-    
-from impt import preset_import
+
 
 tf = preset_import('tf')
 gfile = preset_import('gfile')
 tf.compat.v1.enable_eager_execution()
+
 
 def compute_ci(data, level=0.95):
     r"""Computes confidence interval.
@@ -46,6 +48,7 @@ class Base():
         drange (float): Dynamic range, i.e., difference between the maximum and
             minimum allowed.
     """
+
     def __init__(self, dtype):
         """
         Args:
@@ -111,6 +114,7 @@ class PSNR(Base):
     luminance, if the inputs are not gamma-corrected). PSNR is computed
     on the luma.
     """
+
     def __call__(self, im1, im2, mask=None):
         """
         Args:
@@ -123,7 +127,7 @@ class PSNR(Base):
         """
         self._assert_type(im1)
         self._assert_type(im2)
-        im1 = im1.astype(float) # must be cast to an unbounded type
+        im1 = im1.astype(float)  # must be cast to an unbounded type
         im2 = im2.astype(float)
         im1 = self._ensure_3d(im1)
         im2 = self._ensure_3d(im2)
@@ -145,10 +149,10 @@ class PSNR(Base):
             "{mask_shape}"
         ).format(input_shape=im1.shape, mask_shape=mask.shape)
         # Mask guaranteed to be HxWx1 now
-        mask = mask.astype(bool) # in case it's not logical yet
+        mask = mask.astype(bool)  # in case it's not logical yet
         se = np.square(im1[mask] - im2[mask])
         mse = np.sum(se) / np.sum(mask)
-        psnr = 10 * np.log10((self.drange ** 2) / mse) # dB
+        psnr = 10 * np.log10((self.drange ** 2) / mse)  # dB
         return psnr
 
 
@@ -159,6 +163,7 @@ class SSIM(Base):
     luminance, if the inputs are not gamma-corrected). SSIM is computed
     on the luma.
     """
+
     def __init__(self, dtype):
         super().__init__(dtype)
         assert tf is not None, "TensorFlow import failed"
@@ -166,7 +171,7 @@ class SSIM(Base):
     def __call__(self, im1, im2, multiscale=False):
         self._assert_type(im1)
         self._assert_type(im2)
-        im1 = im1.astype(float) # must be cast to an unbounded type
+        im1 = im1.astype(float)  # must be cast to an unbounded type
         im2 = im2.astype(float)
         im1 = self._ensure_3d(im1)
         im2 = self._ensure_3d(im2)
@@ -203,6 +208,7 @@ class LPIPS(Base):
             minimum allowed.
         lpips_func (tf.function): The LPIPS network packed into a function.
     """
+
     def __init__(self, dtype, weight_pb=None):
         """
         Args:

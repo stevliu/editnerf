@@ -12,8 +12,9 @@ from run_nerf_helpers import get_rays, sample_pdf, to8b, to_disp_img, img2mse, m
 
 DEBUG = False
 
-def render(H=None, W=None, focal=None, style=None, alpha=None, feature=None, weights=None, chunk=1024*32, rays=None, c2w=None, ndc=False,
-                  near=0., far=1., use_viewdirs=False, viewdirs_reg=None, **kwargs):
+
+def render(H=None, W=None, focal=None, style=None, alpha=None, feature=None, weights=None, chunk=1024 * 32, rays=None, c2w=None, ndc=False,
+           near=0., far=1., use_viewdirs=False, viewdirs_reg=None, **kwargs):
     """Render rays
     Args:
       H: int. Height of image in pixels.
@@ -38,12 +39,12 @@ def render(H=None, W=None, focal=None, style=None, alpha=None, feature=None, wei
         rays_o, rays_d = get_rays(H, W, focal, c2w)
         style = style.repeat(rays_o.shape[0] * rays_o.shape[1], 1)
         if alpha is not None:
-            #Color feature caching case
+            # Color feature caching case
             alpha = alpha.view(style.shape[0], -1, 1)
         if weights is not None:
             weights = weights.view(-1, weights.shape[-1])
         if feature is not None:
-            #shape feature caching case
+            # shape feature caching case
             feature = feature.view(-1, feature.shape[2], feature.shape[3])
     else:
         # use provided ray batch
@@ -53,20 +54,20 @@ def render(H=None, W=None, focal=None, style=None, alpha=None, feature=None, wei
         # provide ray directions as input
         viewdirs = rays_d
         viewdirs = viewdirs / torch.norm(viewdirs, dim=-1, keepdim=True)
-        viewdirs = torch.reshape(viewdirs, [-1,3]).float()
+        viewdirs = torch.reshape(viewdirs, [-1, 3]).float()
 
         if viewdirs_reg is not None:
             viewdirs_reg = viewdirs_reg / torch.norm(viewdirs_reg, dim=-1, keepdim=True)
-            viewdirs_reg = torch.reshape(viewdirs_reg, [-1,3]).float()
+            viewdirs_reg = torch.reshape(viewdirs_reg, [-1, 3]).float()
 
-    sh = rays_d.shape # [..., 3]
+    sh = rays_d.shape  # [..., 3]
 
     # Create ray batch
-    rays_o = torch.reshape(rays_o, [-1,3]).float()
-    rays_d = torch.reshape(rays_d, [-1,3]).float()
+    rays_o = torch.reshape(rays_o, [-1, 3]).float()
+    rays_d = torch.reshape(rays_d, [-1, 3]).float()
 
     if isinstance(near, float) or isinstance(near, int) or len(near.shape) < 2:
-        near, far = near * torch.ones_like(rays_d[...,:1]), far * torch.ones_like(rays_d[...,:1])
+        near, far = near * torch.ones_like(rays_d[..., :1]), far * torch.ones_like(rays_d[..., :1])
 
     rays = torch.cat([rays_o, rays_d, near, far], -1)
     if use_viewdirs:
@@ -79,8 +80,8 @@ def render(H=None, W=None, focal=None, style=None, alpha=None, feature=None, wei
         all_ret[k] = torch.reshape(all_ret[k], k_sh)
     k_extract = ['rgb_map', 'disp_map', 'acc_map']
     ret_list = [all_ret[k] for k in k_extract]
-    ret_dict = {k : all_ret[k] for k in all_ret if k not in k_extract}
-    return ret_list + [ret_dict] 
+    ret_dict = {k: all_ret[k] for k in all_ret if k not in k_extract}
+    return ret_list + [ret_dict]
 
 
 def render_rays(ray_batch,
@@ -127,26 +128,26 @@ def render_rays(ray_batch,
       acc0: See acc_map. Output for coarse model.
       z_std: [num_rays]. Standard deviation of distances along ray for each
         sample.
-    """    
+    """
     N_rays = ray_batch.shape[0]
-    rays_o, rays_d = ray_batch[:,0:3], ray_batch[:,3:6] # [N_rays, 3] each
-    viewdirs = ray_batch[:,-3:] if ray_batch.shape[-1] > 8 else None
-    bounds = torch.reshape(ray_batch[...,6:8], [-1,1,2])
-    near, far = bounds[...,0], bounds[...,1] # [-1,1]
+    rays_o, rays_d = ray_batch[:, 0:3], ray_batch[:, 3:6]  # [N_rays, 3] each
+    viewdirs = ray_batch[:, -3:] if ray_batch.shape[-1] > 8 else None
+    bounds = torch.reshape(ray_batch[..., 6:8], [-1, 1, 2])
+    near, far = bounds[..., 0], bounds[..., 1]  # [-1,1]
     t_vals = torch.linspace(0., 1., steps=N_samples)
     style_batch_coarse = style_batch.repeat([N_samples, 1])
-   
+
     if not lindisp:
-        z_vals = near * (1.-t_vals) + far * (t_vals)
+        z_vals = near * (1. - t_vals) + far * (t_vals)
     else:
-        z_vals = 1./(1./near * (1.-t_vals) + 1./far * (t_vals))
+        z_vals = 1. / (1. / near * (1. - t_vals) + 1. / far * (t_vals))
     z_vals = z_vals.expand([N_rays, N_samples])
 
-    if perturb_coarse > 0.: 
+    if perturb_coarse > 0.:
         # get intervals between samples
-        mids = .5 * (z_vals[...,1:] + z_vals[...,:-1])
-        upper = torch.cat([mids, z_vals[...,-1:]], -1)
-        lower = torch.cat([z_vals[...,:1], mids], -1)
+        mids = .5 * (z_vals[..., 1:] + z_vals[..., :-1])
+        upper = torch.cat([mids, z_vals[..., -1:]], -1)
+        lower = torch.cat([z_vals[..., :1], mids], -1)
         # stratified samples in those intervals
         t_rand = torch.rand(z_vals.shape)
 
@@ -161,13 +162,13 @@ def render_rays(ray_batch,
     if weights is not None and perturb_coarse == 0.:
         rgb_map_0 = None
     else:
-        pts = rays_o[...,None,:] + rays_d[...,None,:] * z_vals[...,:,None] # [N_rays, N_samples, 3]
+        pts = rays_o[..., None, :] + rays_d[..., None, :] * z_vals[..., :, None]  # [N_rays, N_samples, 3]
         raw = network_query_fn(pts, style_batch_coarse, viewdirs, network_fn, None, None)
         rgb_map, disp_map, acc_map, weights, raws, features = raw2outputs(raw, z_vals, rays_d, raw_noise_std, white_bkgd, pytest=pytest)
         raw_alpha = raws[..., 3]
 
         if viewdirs_reg is not None:
-            #randomly pick some rays, and then randomly pick a point along each of those rays
+            # randomly pick some rays, and then randomly pick a point along each of those rays
             N_pts = pts.shape[0]
             N_views = viewdirs_reg.shape[0]
             rand_point = np.random.randint(0, pts.shape[1], size=(N_pts,))
@@ -176,25 +177,25 @@ def render_rays(ray_batch,
             style_batch_reg = style_batch_coarse[:int(N_pts * N_views)]
             raws_reg = network_query_fn(pts_reg_coarse, style_batch_reg, viewdirs_reg, network_fn, None, None)
             raw_rgb_reg_coarse = torch.sigmoid(raws_reg[..., :3])
-            rgb_variance_coarse = raw_rgb_reg_coarse.var(dim=0).sum(dim=1) #[N_pts]
+            rgb_variance_coarse = raw_rgb_reg_coarse.var(dim=0).sum(dim=1)  # [N_pts]
 
         if N_importance > 0:
             rgb_map_0, disp_map_0, acc_map_0, weights_0 = rgb_map, disp_map, acc_map, weights
 
     if N_importance > 0:
-        z_vals_mid = .5 * (z_vals[...,1:] + z_vals[...,:-1])
-        z_samples = sample_pdf(z_vals_mid, weights[...,1:-1], N_importance, det=(perturb==0.), pytest=pytest)
+        z_vals_mid = .5 * (z_vals[..., 1:] + z_vals[..., :-1])
+        z_samples = sample_pdf(z_vals_mid, weights[..., 1:-1], N_importance, det=(perturb == 0.), pytest=pytest)
         z_samples = z_samples.detach()
         z_vals, _ = torch.sort(torch.cat([z_vals, z_samples], -1), -1)
         style_batch = torch.cat([style_batch_coarse, style_batch.repeat([N_importance, 1])])
-        pts = rays_o[...,None,:] + rays_d[...,None,:] * z_vals[...,:,None] # [N_rays, N_samples + N_importance, 3]
+        pts = rays_o[..., None, :] + rays_d[..., None, :] * z_vals[..., :, None]  # [N_rays, N_samples + N_importance, 3]
         run_fn = network_fn if network_fine is None else network_fine
         raw = network_query_fn(pts, style_batch, viewdirs, run_fn, alpha, feature)
         rgb_map, disp_map, acc_map, weights, raws, features = raw2outputs(raw, z_vals, rays_d, raw_noise_std, white_bkgd, pytest=pytest)
         raw_alpha = raws[..., 3]
 
         if viewdirs_reg is not None:
-            #randomly pick some rays, and then randomly pick a point along each of those rays
+            # randomly pick some rays, and then randomly pick a point along each of those rays
             N_pts = pts.shape[0]
             N_views = viewdirs_reg.shape[0]
             rand_point = np.random.randint(0, pts.shape[1], size=(N_pts,))
@@ -203,10 +204,10 @@ def render_rays(ray_batch,
             style_batch_reg = style_batch[:int(N_pts * N_views)]
             raws_reg = network_query_fn(pts_reg_fine, style_batch_reg, viewdirs_reg, run_fn, None, None)
             raw_rgb_reg = torch.sigmoid(raws_reg[..., :3])
-            rgb_variance = raw_rgb_reg.var(dim=0) #[N_pts, 3]
-            rgb_variance = rgb_variance.sum(dim=1) #[N_pts] 
+            rgb_variance = raw_rgb_reg.var(dim=0)  # [N_pts, 3]
+            rgb_variance = rgb_variance.sum(dim=1)  # [N_pts]
 
-    ret = {'rgb_map' : rgb_map, 'disp_map' : disp_map, 'acc_map' : acc_map, 'weights': weights}
+    ret = {'rgb_map': rgb_map, 'disp_map': disp_map, 'acc_map': acc_map, 'weights': weights}
     if features is not None:
         ret['raw_alpha'] = raw_alpha
         ret['features'] = features
@@ -223,6 +224,7 @@ def render_rays(ray_batch,
             print(f"! [Numerical Error] {k} contains nan or inf.")
     return ret
 
+
 def render_path(render_poses, styles, hwfs, chunk, render_kwargs, nfs=None, gt_imgs=None, alpha_cache=None, feature_cache=None, weights_cache=None, savedir=None, maximum=1000, get_cached=None, get_rgbs=False, verbose=True, cb=None, update_cb=None):
     render_kwargs['network_fine'].get_cached = get_cached
     rgbs = []
@@ -235,18 +237,20 @@ def render_path(render_poses, styles, hwfs, chunk, render_kwargs, nfs=None, gt_i
     total_psnr0 = 0
 
     N = len(render_poses)
-    s = N//maximum if len(render_poses) > maximum else 1
-    if gt_imgs is not None: gt_imgs = gt_imgs[::s].cuda()
+    s = N // maximum if len(render_poses) > maximum else 1
+    if gt_imgs is not None:
+        gt_imgs = gt_imgs[::s].cuda()
     render_poses = render_poses[::s].cuda()
     styles = styles[::s].cuda()
     hwfs = hwfs[::s].cuda()
-    
+
     iterator = zip(render_poses, styles)
     if verbose:
         iterator = tqdm(iterator, total=len(styles))
 
     for i, (c2w, style) in enumerate(iterator):
-        if cb is not None: cb(i)
+        if cb is not None:
+            cb(i)
         H, W, focal = hwfs[i]
         H, W = int(H), int(W)
         if nfs is not None:
@@ -256,13 +260,13 @@ def render_path(render_poses, styles, hwfs, chunk, render_kwargs, nfs=None, gt_i
         alpha = alpha_cache[i] if alpha_cache is not None else None
         feature = feature_cache[i] if feature_cache is not None else None
         weight = weights_cache[i] if weights_cache is not None else None
-        rgb, disp, acc, additional = render(H, W, focal, style=style, chunk=chunk, weights=weight, c2w=c2w[:3,:4], alpha=alpha, feature=feature, **render_kwargs)
+        rgb, disp, acc, additional = render(H, W, focal, style=style, chunk=chunk, weights=weight, c2w=c2w[:3, :4], alpha=alpha, feature=feature, **render_kwargs)
 
-        if 'rgb0' in additional:    
+        if 'rgb0' in additional:
             rgb0 = additional['rgb0']
 
         if gt_imgs is not None:
-            gt_img = gt_imgs[i] 
+            gt_img = gt_imgs[i]
             mse_loss = img2mse(rgb, gt_img)
             psnr = mse2psnr(mse_loss)
             total_psnr += psnr.item()
@@ -270,13 +274,13 @@ def render_path(render_poses, styles, hwfs, chunk, render_kwargs, nfs=None, gt_i
                 mse_loss0 = img2mse(rgb0, gt_img)
                 psnr0 = mse2psnr(mse_loss0)
                 total_psnr0 += psnr0.item()
-            
+
         rgbs.append(rgb.cpu().numpy())
         disps.append(disp.cpu().numpy())
 
         if update_cb:
             update_cb(i, rgbs[-1])
-        
+
         if get_cached:
             alphas.append(additional['raw_alpha'])
             features.append(additional['features'])
@@ -290,7 +294,7 @@ def render_path(render_poses, styles, hwfs, chunk, render_kwargs, nfs=None, gt_i
             if gt_imgs is not None:
                 gt_img = to8b((gt_imgs[i]).cpu().numpy())
                 imageio.imwrite(os.path.join(savedir, '{:04d}_gt.png'.format(i)), gt_img)
-        
+
     if gt_imgs is not None:
         with open(os.path.join(savedir, 'log.txt'), 'a+') as f:
             torchvision.utils.save_image(torch.tensor(rgbs).cpu().permute(0, 3, 1, 2), 'rgbs.png')
@@ -309,6 +313,7 @@ def render_path(render_poses, styles, hwfs, chunk, render_kwargs, nfs=None, gt_i
     else:
         return rgbs, disps, total_psnr
 
+
 def raw2outputs(raw, z_vals, rays_d, raw_noise_std=0, white_bkgd=False, pytest=False):
     """Transforms model's predictions to semantically meaningful values.
     Args:
@@ -322,62 +327,63 @@ def raw2outputs(raw, z_vals, rays_d, raw_noise_std=0, white_bkgd=False, pytest=F
         weights: [num_rays, num_samples]. Weights assigned to each sampled color.
         depth_map: [num_rays]. Estimated distance to object.
     """
-    raw2alpha = lambda raw, dists, act_fn=F.relu: 1.-torch.exp(-act_fn(raw)*dists)
-    dists = z_vals[...,1:] - z_vals[...,:-1]
-    dists = torch.cat([dists, torch.Tensor([1e10]).expand(dists[...,:1].shape)], -1)  # [N_rays, N_samples] #last distance is placeholder
-    dists = dists * torch.norm(rays_d[...,None,:], dim=-1)
+    def raw2alpha(raw, dists, act_fn=F.relu): return 1. - torch.exp(-act_fn(raw) * dists)
+    dists = z_vals[..., 1:] - z_vals[..., :-1]
+    dists = torch.cat([dists, torch.Tensor([1e10]).expand(dists[..., :1].shape)], -1)  # [N_rays, N_samples] #last distance is placeholder
+    dists = dists * torch.norm(rays_d[..., None, :], dim=-1)
 
-    rgb = torch.sigmoid(raw[...,:3])  # [N_rays, N_samples, 3]
+    rgb = torch.sigmoid(raw[..., :3])  # [N_rays, N_samples, 3]
     noise = 0.
 
     if raw_noise_std > 0.:
-        noise = torch.randn(raw[...,3].shape) * raw_noise_std
+        noise = torch.randn(raw[..., 3].shape) * raw_noise_std
         # Overwrite randomly sampled data if pytest
         if pytest:
             np.random.seed(0)
-            noise = np.random.rand(*list(raw[...,3].shape)) * raw_noise_std
+            noise = np.random.rand(*list(raw[..., 3].shape)) * raw_noise_std
             noise = torch.Tensor(noise)
 
-    alpha = raw2alpha(raw[...,3] + noise, dists)  # [N_rays, N_samples]
-    weights = alpha * torch.cumprod(torch.cat([torch.ones((alpha.shape[0], 1)), 1.-alpha + 1e-10], -1), -1)[:, :-1]
-    rgb_map = torch.sum(weights[...,None] * rgb, -2)  # [N_rays, 3]
-    
+    alpha = raw2alpha(raw[..., 3] + noise, dists)  # [N_rays, N_samples]
+    weights = alpha * torch.cumprod(torch.cat([torch.ones((alpha.shape[0], 1)), 1. - alpha + 1e-10], -1), -1)[:, :-1]
+    rgb_map = torch.sum(weights[..., None] * rgb, -2)  # [N_rays, 3]
+
     norm = torch.sum(weights, -1) + 1e-5
-    depth_map = torch.sum(weights * z_vals, -1) 
-    disp_map = 1./torch.max(1e-10 * torch.ones_like(depth_map), depth_map / norm)
+    depth_map = torch.sum(weights * z_vals, -1)
+    disp_map = 1. / torch.max(1e-10 * torch.ones_like(depth_map), depth_map / norm)
     acc_map = torch.sum(weights, -1)
 
     if white_bkgd:
-        rgb_map = rgb_map + (1.-acc_map[...,None])
+        rgb_map = rgb_map + (1. - acc_map[..., None])
 
     if raw.shape[-1] > 4:
         return rgb_map, disp_map, acc_map, weights, raw[..., :4], raw[..., 4:]
     else:
         return rgb_map, disp_map, acc_map, weights, raw, None
 
-def batchify_rays(rays_flat, style, alpha, feature, weights, chunk=1024*32, N_samples=64, N_importance=0, viewdirs_reg=None, **kwargs):
+
+def batchify_rays(rays_flat, style, alpha, feature, weights, chunk=1024 * 32, N_samples=64, N_importance=0, viewdirs_reg=None, **kwargs):
     """Render rays in smaller minibatches to avoid OOM.
     """
     all_ret = {}
-    
+
     for i in range(0, rays_flat.shape[0], chunk):
         if alpha is not None:
-            alpha_chunk = alpha[i:i+chunk]
+            alpha_chunk = alpha[i:i + chunk]
         else:
             alpha_chunk = None
         if feature is not None:
-            feature_chunk = feature[i:i+chunk]
+            feature_chunk = feature[i:i + chunk]
         else:
             feature_chunk = None
         if weights is not None:
-            weights_chunk = weights[i:i+chunk]
+            weights_chunk = weights[i:i + chunk]
         else:
             weights_chunk = None
-        ret = render_rays(rays_flat[i:i+chunk], style[i:i+chunk], alpha=alpha_chunk, feature=feature_chunk, weights=weights_chunk, N_samples=N_samples, N_importance=N_importance, viewdirs_reg=viewdirs_reg, **kwargs)
+        ret = render_rays(rays_flat[i:i + chunk], style[i:i + chunk], alpha=alpha_chunk, feature=feature_chunk, weights=weights_chunk, N_samples=N_samples, N_importance=N_importance, viewdirs_reg=viewdirs_reg, **kwargs)
         for k in ret:
             if k not in all_ret:
                 all_ret[k] = []
             all_ret[k].append(ret[k])
 
-    all_ret = {k : torch.cat(all_ret[k], 0) for k in all_ret}
+    all_ret = {k: torch.cat(all_ret[k], 0) for k in all_ret}
     return all_ret

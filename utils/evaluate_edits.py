@@ -1,5 +1,5 @@
 import os, json, argparse
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import torch
 import numpy as np
@@ -61,7 +61,7 @@ def get_metrics(fake, real):
         psnr_total += psnr(x, y)
         ssim_total += ssim(x, y)
         total += 1
-    
+
     return psnr_total/total, ssim_total/total, lpips(fake * 2 - 1, real * 2 - 1).mean().item()
 
 

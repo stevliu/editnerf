@@ -3,11 +3,17 @@ Utility for simple distribution of work on multiple processes, by
 making sure only one process is working on a job at once.
 '''
 
-import os, errno, socket, atexit, time, sys
+import os
+import errno
+import socket
+import atexit
+import time
+import sys
+
 
 def exit_if_job_done(directory, redo=False, force=False, verbose=True):
     if pidfile_taken(os.path.join(directory, 'lockfile.pid'),
-            force=force, verbose=verbose):
+                     force=force, verbose=verbose):
         sys.exit(0)
     donefile = os.path.join(directory, 'done.txt')
     if os.path.isfile(donefile):
@@ -22,12 +28,14 @@ def exit_if_job_done(directory, redo=False, force=False, verbose=True):
                 print('%s %s' % (donefile, msg))
             sys.exit(0)
 
+
 def mark_job_done(directory):
     with open(os.path.join(directory, 'done.txt'), 'w') as f:
         f.write('done by %d@%s %s at %s' %
                 (os.getpid(), socket.gethostname(),
                  os.getenv('STY', ''),
                  time.strftime('%c')))
+
 
 def pidfile_taken(path, verbose=False, force=False):
     '''
@@ -72,11 +80,12 @@ def pidfile_taken(path, verbose=False, force=False):
     atexit.register(delete_pidfile, lockfile, path)
     # Write my pid into the open file.
     lockfile.write('%d@%s %s\n' % (os.getpid(), socket.gethostname(),
-        os.getenv('STY', '')))
+                                   os.getenv('STY', '')))
     lockfile.flush()
     os.fsync(lockfile)
     # Return 'None' to say there was not a conflict.
     return None
+
 
 def delete_pidfile(lockfile, path):
     '''

@@ -1,6 +1,7 @@
 import random
 
-import torch, os
+import torch
+import os
 import numpy as np
 
 from rendering import render_path
@@ -10,6 +11,7 @@ from model import create_nerf
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 np.random.seed(0)
+
 
 def test():
     parser = config_parser()
@@ -29,7 +31,7 @@ def test():
 
     render_kwargs_train.update(bds_dict)
     render_kwargs_test.update(bds_dict)
-    
+
     with torch.no_grad():
         if args.render_test:
             if args.shuffle_poses:
@@ -52,6 +54,7 @@ def test():
             os.makedirs(trainsavedir, exist_ok=True)
             _, _, psnr = render_path(poses_train.to(device), style_train, hwfs_train, args.chunk, render_kwargs_test, nfs=nf_train, gt_imgs=images_train, savedir=trainsavedir)
             print('Saved train set w/ psnr', psnr)
+
 
 if __name__ == '__main__':
     torch.set_default_tensor_type('torch.cuda.FloatTensor')

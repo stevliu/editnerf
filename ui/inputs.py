@@ -13,16 +13,16 @@ def config_parser():
     parser.add_argument("--n_iters", type=int, default=10000000, help='number of iterations to train')
     parser.add_argument("--n_iters_real", type=int, default=25000, help='number of iterations to train')
     parser.add_argument("--n_iters_code_only", type=int, default=25000, help='number of iterations to train')
-    parser.add_argument("--N_viewdirs_reg", type=int, default=0,help='number of viewdirs to regularize radiance at each point')
-    parser.add_argument("--N_rand", type=int, default=32*32*4, help='batch size (number of random rays per gradient step)')
+    parser.add_argument("--N_viewdirs_reg", type=int, default=0, help='number of viewdirs to regularize radiance at each point')
+    parser.add_argument("--N_rand", type=int, default=32 * 32 * 4, help='batch size (number of random rays per gradient step)')
     parser.add_argument("--lrate", type=float, default=5e-4, help='learning rate')
     parser.add_argument("--lrate_decay", type=int, default=250, help='exponential learning rate decay (in 1000 steps)')
-    parser.add_argument("--chunk", type=int, default=1024*4, help='number of rays processed in parallel, decrease if running out of memory')
-    parser.add_argument("--netchunk", type=int, default=1024*64, help='number of pts sent through network in parallel, decrease if running out of memory')
+    parser.add_argument("--chunk", type=int, default=1024 * 4, help='number of rays processed in parallel, decrease if running out of memory')
+    parser.add_argument("--netchunk", type=int, default=1024 * 64, help='number of pts sent through network in parallel, decrease if running out of memory')
     parser.add_argument("--var_param", type=float, default=0, help='if > 0, penalizes variance of color at a point')
     parser.add_argument("--weight_change_param", type=float, default=0, help='if > 0, penalizes deviation from original model. useful for real image fitting')
     parser.add_argument("--precrop_iters", type=int, default=0, help='number of steps to train on central crops')
-    parser.add_argument("--precrop_frac", type=float, default=.5, help='fraction of img taken for central crops') 
+    parser.add_argument("--precrop_frac", type=float, default=.5, help='fraction of img taken for central crops')
     parser.add_argument("--style_optimizer", type=str, default='adam', help='options : adam/lbfgs')
 
     # learned code options
@@ -51,9 +51,9 @@ def config_parser():
     parser.add_argument("--multires", type=int, default=10, help='log2 of max freq for positional encoding (3D location)')
     parser.add_argument("--multires_views", type=int, default=4, help='log2 of max freq for positional encoding (2D direction)')
 
-    # rendering options: 
+    # rendering options:
     parser.add_argument("--blender_near", type=float, default=2., help='near parameter')
-    parser.add_argument("--blender_far", type=float, default=6.,help='far parameter')
+    parser.add_argument("--blender_far", type=float, default=6., help='far parameter')
     parser.add_argument("--N_samples", type=int, default=64, help='number of coarse samples per ray')
     parser.add_argument("--N_importance", type=int, default=0, help='number of additional fine samples per ray')
     parser.add_argument("--perturb", type=float, default=1., help='set to 0. for no jitter, 1. for jitter')
@@ -71,31 +71,27 @@ def config_parser():
     # visualization options
     parser.add_argument("--shuffle_poses", action='store_true', help='shuffle test set poses')
     parser.add_argument("--render_test", action='store_true', help='render the test set instead of render_poses path')
-    parser.add_argument("--render_train", action='store_true', help='render the train set instead of render_poses path') 
+    parser.add_argument("--render_train", action='store_true', help='render the train set instead of render_poses path')
 
     # model loading options
     parser.add_argument("--no_reload", action='store_true', help='do not reload weights from saved ckpt')
     parser.add_argument("--load_from", type=str, default=None, help='path to load model from in test time')
     parser.add_argument("--load_it", type=int, default=0, help='iteration to load')
 
-    ## blender flags
-    parser.add_argument("--white_bkgd", action='store_true', 
+    # blender flags
+    parser.add_argument("--white_bkgd", action='store_true',
                         help='set to render synthetic data on a white bkgd (always use for dvoxels)')
-                        
+
     # logging/saving options
-    parser.add_argument("--i_print",   type=int, default=100, 
+    parser.add_argument("--i_print",   type=int, default=100,
                         help='frequency of console printout and metric loggin')
-    parser.add_argument("--i_weights", type=int, default=10000, 
+    parser.add_argument("--i_weights", type=int, default=10000,
                         help='frequency of weight ckpt saving')
-    parser.add_argument("--i_testset", type=int, default=10000000, 
+    parser.add_argument("--i_testset", type=int, default=10000000,
                         help='frequency of testset saving')
-    parser.add_argument("--i_trainset", type=int, default=10000000, 
+    parser.add_argument("--i_trainset", type=int, default=10000000,
                         help='frequency of trainset saving')
-    parser.add_argument("--i_video", type=int, default=10000000, 
+    parser.add_argument("--i_video", type=int, default=10000000,
                         help='frequency of render_poses video saving')
 
-    return parser   
-    
-    
-   
-    
+    return parser
