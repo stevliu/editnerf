@@ -51,18 +51,12 @@ cd editnerf
 
 - Install the dependencies
 ```bash
-conda create --name editnerf python=3.6
-conda activate editnerf
-conda install --file requirements.txt
-pip install lpips imageio-ffmpeg
-cd torchsearchsorted
-pip install .
-cd ../
+bash scripts/setup_env.sh
 ```
 
 - Obtain pre-trained models and editing examples:
 ```bash
-bash scripts/setup.sh
+bash scripts/setup_models.sh
 ```
 
 - Optionally, download the relevant datasets. This step is required to evaluate edits and for training/testing a conditional radiance field:
