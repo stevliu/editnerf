@@ -10,24 +10,29 @@
 [Jun-Yan Zhu](https://www.cs.cmu.edu/~junyanz/),
 [Bryan Russell](http://bryanrussell.org/) <br>
 MIT, Adobe Research, CMU<br>
-in arXiv 2021.
+in arXiv:2105.06466, 2021.
 
 <a href="http://editnerf.csail.mit.edu/"><img src="images/demo.gif" width=800>
 
 
 ## Editing Results
+### Color Editing
 <img src="images/coloredits.png"  width="800" />
 <br>
 Our method propagates sparse 2D user scribbles to fill an object region, rendering the edit consistently across views. The user provides a color, a foreground scribble for the region to change, and a background scribble for regions to keep unchanged. To conduct the edit, we optimize a reconstruction-based loss to encourage the model to change the color at the foreground scribble, but maintain the color on the background scribbles.
+
+### Shape Editing
 
 <img src="images/shapeedits.png"  width="800" />
 <br>
 Our method propagates 2D user edits to remove or add an object part, propagating the 2D edit consistently across views. For shape removal, the user scribbles over a region of the object to remove. To conduct the removal, we optimize both a reconstruction loss and a density-based loss, encouraging the model to remove density at the scribbled regions. For shape addition, the user selects an object part to paste into the instance. To conduct the addition, we optimize a reconstruction loss similar to the one used for color editing.
 
+### Color and Shape Transfer
 <img src="images/swapping.png"  width="800" />
 <br>
 Our method can transfer shape and color between object instances simply by swapping the color and shape codes between instances.
 
+### Editing a Real Image
 
 <img src="images/realimage.png"  width="800" />
 <br>
@@ -114,7 +119,7 @@ To evaluate the conditional radiance fields used in our paper, please run:
 bash scripts/reconstruction_experiments.sh
 ```
 
-## Training and Editing your own models
+## Training and Editing Your Own Models
 
 To train a model on a different dataset, first setup the directory to store the dataset. The structure should be
 ```bash
@@ -146,7 +151,7 @@ ui/
 Please refer to `ui/photoshapes` for an example.
 
 
-## Editing a real image
+## Editing a Real Image
 To edit a real image, we first decide on a base model to finetune to the real image. In our experiments, we use the Dosovitskiy chairs model. Then, visually estimate the pose of the image. One way to do this is by finding the nearest neighbor pose in the training set of the base model. Then, construct the dataset folder containing the `.json` files mentioned in the above section.
 
 The directory structure should be
@@ -181,12 +186,13 @@ Please refer to `ui/dosovitskiy_chairs/real_chair` for an example.
 This codebase is heavily based on the [nerf-pytorch](https://github.com/yenchenlin/nerf-pytorch) code base,  and our user interface is heavily based on the [GAN rewriting](https://github.com/davidbau/rewriting) interface. We also use LBFGS code from [PyTorch-LBFGS](https://github.com/hjmshi/PyTorch-LBFGS) and job scheduling code from the [GAN seeing](https://github.com/davidbau/ganseeing) codebase.
 
 We thank all authors for the wonderful code!
+
 ## Citation
 If you use this code for your research, please cite the following work.
 
 ```bash
 @misc{liu2021editing,
-      title={Editing Conditional Radiance Fields}, 
+      title={Editing Conditional Radiance Fields},
       author={Steven Liu and Xiuming Zhang and Zhoutong Zhang and Richard Zhang and Jun-Yan Zhu and Bryan Russell},
       year={2021},
       eprint={2105.06466},
