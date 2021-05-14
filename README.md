@@ -183,11 +183,14 @@ This codebase is heavily based on the [nerf-pytorch](https://github.com/yenchenl
 We thank all authors for the wonderful code!
 ## Citation
 If you use this code for your research, please cite the following work.
+
 ```bash
-@inproceedings{liu2021editnerf,
-  title={Editing Conditional Radiance Fields},
-  author={Liu, Steven and Zhang, Xiuming and Zhang, Zhoutong and Zhang, Richard and Zhu, Jun-Yan and Russell, Bryan},
-  booktitle={arXiv preprint },
-  year={2021}
+@misc{liu2021editing,
+      title={Editing Conditional Radiance Fields}, 
+      author={Steven Liu and Xiuming Zhang and Zhoutong Zhang and Richard Zhang and Jun-Yan Zhu and Bryan Russell},
+      year={2021},
+      eprint={2105.06466},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
 }
 ```
