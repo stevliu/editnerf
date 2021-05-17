@@ -183,7 +183,7 @@ Please refer to `ui/dosovitskiy_chairs/real_chair` for an example.
 
 ## Acknowledgments
 
-This codebase is heavily based on the [nerf-pytorch](https://github.com/yenchenlin/nerf-pytorch) code base, and our user interface is heavily based on the [GAN rewriting](https://github.com/davidbau/rewriting) interface. We also use LBFGS code from [PyTorch-LBFGS](https://github.com/hjmshi/PyTorch-LBFGS) and job scheduling code from the [GAN seeing](https://github.com/davidbau/ganseeing) codebase.
+This codebase is heavily based on the [nerf-pytorch](https://github.com/yenchenlin/nerf-pytorch) code base, and our user interface is heavily based on the [GAN rewriting](https://github.com/davidbau/rewriting) interface. We also use LBFGS code from [PyTorch-LBFGS](https://github.com/hjmshi/PyTorch-LBFGS), SSIM code from [pytorch-ssim](https://github.com/Po-Hsun-Su/pytorch-ssim), and job scheduling code from the [GAN seeing](https://github.com/davidbau/ganseeing) codebase.
 
 We thank all authors for the wonderful code!
 

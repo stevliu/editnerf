@@ -1,6 +1,9 @@
-from impt import preset_import
 import numpy as np
 import lpips
+import torch
+
+from impt import preset_import
+import pytorch_ssim
 
 
 def rgb2lum(im):
@@ -16,12 +19,6 @@ def rgb2lum(im):
     lum = 0.2126 * im[..., 0] + 0.7152 * im[..., 1] + 0.0722 * im[..., 2]
 
     return lum
-
-
-tf = preset_import('tf')
-gfile = preset_import('gfile')
-tf.compat.v1.enable_eager_execution()
-
 
 def compute_ci(data, level=0.95):
     r"""Computes confidence interval.
@@ -155,7 +152,6 @@ class PSNR(Base):
         psnr = 10 * np.log10((self.drange ** 2) / mse)  # dB
         return psnr
 
-
 class SSIM(Base):
     r"""The (multi-scale) Structural Similarity Index (SSIM) :math:`\in [0,1]`
     (higher is better).
@@ -166,7 +162,6 @@ class SSIM(Base):
 
     def __init__(self, dtype):
         super().__init__(dtype)
-        assert tf is not None, "TensorFlow import failed"
 
     def __call__(self, im1, im2, multiscale=False):
         self._assert_type(im1)
@@ -182,14 +177,10 @@ class SSIM(Base):
         if im1.shape[2] == 3:
             im1 = np.expand_dims(rgb2lum(im1), -1)
             im2 = np.expand_dims(rgb2lum(im2), -1)
-        # Guaranteed to be HxWx1 now
-        im1 = tf.convert_to_tensor(im1)
-        im2 = tf.convert_to_tensor(im2)
-        if multiscale:
-            ssim_func = tf.image.ssim_multiscale
-        else:
-            ssim_func = tf.image.ssim
-        similarity = ssim_func(im1, im2, max_val=self.drange)
+        # Guaranteed to be 1x1xHxW now
+        im1 = torch.tensor(im1).unsqueeze(dim=0).permute(0, 3, 1, 2)
+        im2 = torch.tensor(im2).unsqueeze(dim=0).permute(0, 3, 1, 2)
+        similarity = pytorch_ssim.ssim(im1, im2)
         similarity = similarity.numpy()
         return similarity
 
@@ -206,7 +197,6 @@ class LPIPS(Base):
             derived.
         drange (float): Dynamic range, i.e., difference between the maximum and
             minimum allowed.
-        lpips_func (tf.function): The LPIPS network packed into a function.
     """
 
     def __init__(self, dtype, weight_pb=None):
