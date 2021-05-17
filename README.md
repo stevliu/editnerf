@@ -70,7 +70,7 @@ cd ../
 bash scripts/setup_models.sh
 ```
 
-- Optionally, download the relevant datasets. This step is required to evaluate edits and for training/testing a conditional radiance field:
+- Optionally, download the relevant datasets. This step is required to evaluate edits and to train/test a conditional radiance field:
 ```bash
 bash scripts/setup_data.sh
 ```
