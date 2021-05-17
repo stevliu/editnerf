@@ -56,7 +56,13 @@ cd editnerf
 
 - Install the dependencies
 ```bash
-bash scripts/setup_env.sh
+conda create --name editnerf python=3.6
+conda activate editnerf
+conda install --file requirements.txt
+pip install lpips imageio-ffmpeg
+cd torchsearchsorted
+pip install .
+cd ../
 ```
 
 - Obtain pre-trained models and editing examples:
