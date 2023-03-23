@@ -10,7 +10,7 @@
 [Jun-Yan Zhu](https://www.cs.cmu.edu/~junyanz/),
 [Bryan Russell](http://bryanrussell.org/) <br>
 MIT, Adobe Research, CMU<br>
-in arXiv:2105.06466, 2021.
+ICCV 2021.
 
 <a href="http://editnerf.csail.mit.edu/"><img src="images/demo.gif" width=800></a>
 
